@@ -1,26 +1,40 @@
 const fs = require('fs');
 const path = require('path');
 
-function walkSync(dir, filterExtension, lst) {
-    const files = fs.readdirSync(dir);
+function walk(dir, filterExtension, lst) {
 
-    files.forEach(file => {
-        const fullPath = dir + '/' + file;
-        const fileStat = fs.statSync(fullPath);
+    const prom = new Promise((resolve, reject) => {
 
-        if (fileStat.isDirectory()) {
-            lst = walkSync(fullPath, filterExtension, lst);
-        } else {
-            if (path.extname(file) === filterExtension) {
-                lst.push({
-                    file,
-                    path: fullPath
-                });
-            }
-        }
+        fs.readdir(dir, (err, files) => {
+
+            const proms = [];
+
+            files.forEach(file => {
+                const fullPath = dir + '/' + file;
+                const fileStat = fs.statSync(fullPath);
+
+                if (fileStat.isDirectory()) {
+                    const subProm = walk(fullPath, filterExtension, lst);
+                    proms.push(subProm);
+                } else {
+                    if (path.extname(file) === filterExtension) {
+                        lst.push({
+                            file,
+                            path: fullPath
+                        });
+                    }
+                }
+            });
+
+            Promise.all(proms).then(() => {
+                resolve('ok');
+            });
+
+        });
+
     });
 
-    return lst;
+    return prom;
 };
 
-module.exports = walkSync;
+module.exports = walk;

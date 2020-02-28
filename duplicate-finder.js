@@ -8,7 +8,7 @@ function findDuplicates(files) {
         if (filtered.length > 1 && inDups.length === 0) {
             dup.push({
                 file: fileObj.file,
-                dup: filtered.map(x => x.path)
+                dup: filtered.map(x => `${x.path} - ${x.size} MB`)
             });
         }
     });

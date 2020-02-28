@@ -10,10 +10,9 @@ const extension = '.pdf';
 
 const msg = `Discovering files in [${pathToRoot}] with extension [${extension}]`;
 const spinner = ora(msg).start();
-const fileList = [];
 
-walker(pathToRoot, extension, fileList)
-    .then(() => {
+walker(pathToRoot, extension)
+    .then(fileList => {
         const duplicates = duplicateFinder(fileList);
 
         console.log('\n\nDuplicates:\n\n', duplicates);

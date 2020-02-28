@@ -1,52 +1,34 @@
-const fs = require('fs');
-const path = require('path');
+const walker = require('./walker');
+const duplicateFinder = require('./duplicate-finder');
 
 console.log('duplicates');
 console.log(__dirname);
 
-function walkSync(dir, extension, lst) {
-    const files = fs.readdirSync(dir);
 
-    files.forEach(file => {
-        if (fs.statSync(dir + '/' + file).isDirectory()) {
-            lst = walkSync(dir + '/' + file, extension, lst);
-        } else {
-            if (path.extname(file) === extension) {
-                lst.push(file);
-            }
-        }
-    });
-
-    return lst;
-};
-
-function findDuplicates(files) {
-    const dup = [];
-    let prev = files[0];
-
-    for (let i = 1; i < files.length - 1; ++i) {
-        const file = files[i];
-        if (prev === file) {
-            dup.push(file);
-        } else {
-            prev = file;
-        }
+function compare(a, b) {
+    if (a.file < b.file) {
+        return -1;
     }
-    return dup;
+    if (a.file > b.file) {
+        return 1;
+    }
+    return 0;
 }
 
-// const pathToRoot = 'd:\\test';
+// const pathToRoot = 'd:/test';
 const pathToRoot = 'd:\\books\\.NET';
-const ext = '.pdf';
+const extension = '.pdf';
 
 const fileList = [];
-walkSync(pathToRoot, ext, fileList);
+walker(pathToRoot, extension, fileList);
 
-fileList.sort();
+fileList.sort(compare);
 
 console.log(fileList.length);
 console.log(fileList);
 
-const duplicates = findDuplicates(fileList);
+const duplicates = duplicateFinder(fileList);
 
+console.log(`dupliacates - [${duplicates.length}]`);
+// console.log(JSON.stringify(duplicates));
 console.log(duplicates);

@@ -3,46 +3,26 @@ const ora = require('ora');
 const walker = require('./walker');
 const duplicateFinder = require('./duplicate-finder');
 
-
-const spinner = ora('Discovering files...').start();
-
-console.log('duplicates');
-console.log(__dirname);
-
-
-
-
-function compare(a, b) {
-    if (a.file < b.file) {
-        return -1;
-    }
-    if (a.file > b.file) {
-        return 1;
-    }
-    return 0;
-}
-
 // const pathToRoot = 'd:/test';
-// const pathToRoot = 'd:\\books\\.NET';
-const pathToRoot = 'd:\\books';
+const pathToRoot = 'd:\\books\\.NET';
+// const pathToRoot = 'd:\\books';
 const extension = '.pdf';
 
+const msg = `Discovering files in [${pathToRoot}] with extension [${extension}]`;
+const spinner = ora(msg).start();
 const fileList = [];
-walker(pathToRoot, extension, fileList).then(() => {
 
-    fileList.sort(compare);
+walker(pathToRoot, extension, fileList)
+    .then(() => {
+        const duplicates = duplicateFinder(fileList);
 
-    // console.log(fileList);
+        console.log('\n\nDuplicates:\n\n', duplicates);
 
-    const duplicates = duplicateFinder(fileList);
+        console.log('\n---------------')
+        console.log(`files: [${fileList.length}]`);
+        console.log(`dupliacates: [${duplicates.length}]`);
 
-    console.log(duplicates);
-
-    console.log(`files: [${fileList.length}]`);
-    console.log(`dupliacates: [${duplicates.length}]`);
-
-    spinner.stop();
-
-});
+        spinner.stop();
+    });
 
 

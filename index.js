@@ -1,14 +1,25 @@
 const ora = require('ora');
 
+const { save } = require('./serializer');
 const walker = require('./walker');
 const {
     findDuplicatesUsingFiltering,
     findDuplicatesUsingSingleLoop
 } = require('./duplicate-finder');
 
+function dumpStat(title, fileList, data) {
+    console.log(`\n\nDuplicates [${title}]:\n\n`, data);
+
+    save(data, `duplicates-with-${title.toLowerCase()}.json`);
+
+    console.log('\n---------------')
+    console.log(`files: [${fileList.length}]`);
+    console.log(`dupliacates: [${data.length}]`);
+}
+
 // const pathToRoot = 'd:/test';
-// const pathToRoot = 'd:\\books\\.NET';
-const pathToRoot = 'd:\\books';
+const pathToRoot = 'd:\\books\\.NET';
+// const pathToRoot = 'd:\\books';
 const extension = '.pdf';
 
 const msg = `Discovering files in [${pathToRoot}] with extension [${extension}]`;
@@ -21,30 +32,21 @@ walker(pathToRoot, extension)
         spinner.text = 'Finding duplicates';
         spinner.render();
 
-        const prom1 = findDuplicatesUsingFiltering(fileList);
-        const prom2 = findDuplicatesUsingSingleLoop(fileList);
-
-        Promise.all([prom1, prom2])
+        Promise.all([
+            findDuplicatesUsingFiltering(fileList),
+            findDuplicatesUsingSingleLoop(fileList)
+        ])
             .then(duplicates => {
                 spinner.text = 'Done';
                 spinner.render();
 
-                console.log('\n\nDuplicates [Filtering]:\n\n', duplicates);
-
-                console.log('\n---------------')
-                console.log(`files: [${fileList.length}]`);
-                console.log(`dupliacates: [${duplicates.length}]`);
-
-                console.log('\n\nDuplicates [Loop]:\n\n', duplicates);
-
-                console.log('\n---------------')
-                console.log(`files: [${fileList.length}]`);
-                console.log(`dupliacates: [${duplicates.length}]`);
+                dumpStat('Filtering', fileList, duplicates[0]);
+                dumpStat('Looping', fileList, duplicates[1]);
 
                 spinner.stop();
 
                 const hrend = process.hrtime(hrstart);
-                console.info('Execution time (hr): %ds %dms', hrend[0], hrend[1] / 1000000)
+                console.info('\nTotal execution time (hr): %ds %dms', hrend[0], hrend[1] / 1000000)
             });
     });
 

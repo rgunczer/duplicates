@@ -2,62 +2,80 @@ function getFileInfo(fileObj) {
     return `${fileObj.path} - ${fileObj.size} MB`;
 }
 
-function compare(a, b) {
+function comparator(a, b) {
     return (a.file > b.file) ? 1 : -1;
 }
 
 function findDuplicatesUsingFiltering(files) {
-    const prom = new Promise((resolve, reject) => {
-        const dup = [];
+
+    return new Promise((resolve, reject) => {
+        const hrstart = process.hrtime();
+
+        const result = [];
 
         files.forEach(fileObj => {
             const filtered = files.filter(obj => obj.file === fileObj.file);
-            const inDups = dup.filter(obj => obj.file === fileObj.file);
+            const inDups = result.filter(obj => obj.file === fileObj.file);
 
             if (filtered.length > 1 && inDups.length === 0) {
-                dup.push({
+                result.push({
                     file: fileObj.file,
                     dup: filtered.map(x => getFileInfo(x))
                 });
             }
         });
 
-        dup.sort(compare);
+        result.sort(comparator);
 
-        resolve(dup);
+        const hrend = process.hrtime(hrstart);
+
+        resolve({
+            result,
+            hrend
+        });
     });
-    return prom;
+
 }
 
 function findDuplicatesUsingSingleLoop(files) {
 
-    const prom = new Promise((resolve, reject) => {
-        const dups = [];
+    return new Promise((resolve, reject) => {
+        const hrstart = process.hrtime();
 
-        files.sort(compare);
+        const result = [];
+        let dupObj = {};
 
-        let currentFile = files[0].file;
+        files.sort(comparator);
+
+        let prevFileName = files[0].file;
         for (let i = 1; i < files.length - 1; ++i) {
-            if (files[i].file === currentFile) {
-                const lastFile = dups.length > 0 ? dups[dups.length - 1].file : '';
-                if (lastFile !== currentFile) {
-                    dups.push({
-                        file: currentFile,
-                        dup: [getFileInfo(files[i])]
-                    });
+            const currentFileName = files[i].file;
+            if (prevFileName === currentFileName) {
+
+                if (dupObj.file === prevFileName) {
+                    dupObj.dup.push(getFileInfo(files[i]));
                 } else {
-                    dups[dups.length - 1].dup.push(getFileInfo(files[i]));
+                    dupObj = {
+                        file: currentFileName,
+                        dup: [getFileInfo(files[i]), getFileInfo(files[i - 1])]
+                    };
+                    result.push(dupObj);
                 }
-            } else {
-                currentFile = files[i].file;
+
             }
+            prevFileName = currentFileName;
         }
 
-        dups.sort(compare);
+        result.sort(comparator);
 
-        resolve(dups);
+        const hrend = process.hrtime(hrstart);
+
+        resolve({
+            result,
+            hrend
+        });
     });
-    return prom;
+
 }
 
 module.exports = {

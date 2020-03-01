@@ -7,22 +7,21 @@ const {
     findDuplicatesUsingSingleLoop
 } = require('./duplicate-finder');
 
-function dumpStat(title, fileList, data) {
-    console.log(`\n\nDuplicates [${title}]:\n\n`, data);
+function dumpResultAndStats(title, data) {
+    const { result, hrend } = data;
+    // console.log(`\n\nDuplicates [${title}]:\n\n ${JSON.stringify(data.result, null, 2)}`);
 
-    save(data, `duplicates-with-${title.toLowerCase()}.json`);
+    save(result, `duplicates-with-${title.toLowerCase()}.json`);
 
-    console.log('\n---------------')
-    console.log(`files: [${fileList.length}]`);
-    console.log(`dupliacates: [${data.length}]`);
+    console.log(`\nDuplicates found: [${result.length}], "${title}" method took [${hrend[0]}s ${hrend[1] / 1000000}ms]`);
 }
 
 // const pathToRoot = 'd:/test';
-const pathToRoot = 'd:\\books\\.NET';
-// const pathToRoot = 'd:\\books';
+// const pathToRoot = 'd:\\books\\.NET';
+const pathToRoot = 'd:\\books';
 const extension = '.pdf';
 
-const msg = `Discovering files in [${pathToRoot}] with extension [${extension}]`;
+const msg = `Discovering files in [${pathToRoot}/*${extension}]`;
 const spinner = ora(msg).start();
 
 const hrstart = process.hrtime();
@@ -40,8 +39,10 @@ walker(pathToRoot, extension)
                 spinner.text = 'Done';
                 spinner.render();
 
-                dumpStat('Filtering', fileList, duplicates[0]);
-                dumpStat('Looping', fileList, duplicates[1]);
+                console.log(`\nFiles found in (${pathToRoot}/*${extension}): [${fileList.length}]`);
+
+                dumpResultAndStats('Filtering', duplicates[0]);
+                dumpResultAndStats('Looping', duplicates[1]);
 
                 spinner.stop();
 
